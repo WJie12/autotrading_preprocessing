@@ -2,4 +2,9 @@
 /data/
 /venv/
 *.csv
+*.svg
 !stock_table.csv
+!test_set.csv
+!train_set.csv
+!all_set.csv
+!test_set_corr.csv

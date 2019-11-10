@@ -2,6 +2,8 @@ import tushare as ts
 import pandas as pd
 import os
 from sklearn.utils import shuffle
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 
 def concat_all_file(path):
@@ -15,13 +17,13 @@ def concat_all_file(path):
         if flag:
             big_file = reader
             flag = False
-        big_file = pd.concat([big_file, reader])
+        else:
+            big_file = pd.concat([big_file, reader])
     print("Head of file:\n", big_file.head())
     print("Row number of file:\n", len(big_file))
     return big_file
 
-
-def write_file():
+def generate_train_test_all_table():
     test_path = './data/quot/test'
     train_path = './data/quot/train'
 
@@ -68,19 +70,90 @@ def stock_data_preprocess():
     df.ffill(axis=0, inplace=True) #填充缺失数据
     df.to_csv('qjd_gm.csv')
 
-def generate_sub_table():
-    df = pd.read_csv('./all_stocks_all_day.csv')
+def generate_sub_table(in_path, out_path):
+    df = pd.read_csv(in_path)
     stock_code_list = pd.read_csv('./stock_table.csv')['code']
     stock_file = df[df['SecurityID'].isin(stock_code_list)]
-    stock_file.to_csv('./19_stock_all_day.csv', index=False)
+    stock_file.to_csv(out_path, index=False)
 
-def check_pearson_corr():
-    pass
+def generate_sub_test_train_all_table():
+    # def generate_sub_test_table():
+    test_data = "./test_data.csv"
+    sub_test_data = "./sub_test_data.csv"
+    generate_sub_table(test_data, sub_test_data)
+
+    # def generate_sub_train_table():
+    train_data = "./train_data.csv"
+    sub_train_data = "./sub_train_data.csv"
+    generate_sub_table(train_data, sub_train_data)
+
+    # def generate_sub_all_table():
+    all_data = "./all_data.csv"
+    sub_all_data = "./sub_all_data.csv"
+    generate_sub_table(all_data, sub_all_data)
+
+def transfer_table(in_path, out_path):
+    old_df = pd.read_csv(in_path)
+    stock_code_lsit = old_df['SecurityID'].unique()
+    date = old_df.drop_duplicates(subset=['DateTime'], keep='first').loc[:, ['DateTime']]
+    for i in range(len(stock_code_lsit)):
+        new = old_df[old_df['SecurityID'].isin([stock_code_lsit[i]])][['DateTime', 'LastPx']]
+        new.columns = ['DateTime', str(stock_code_lsit[i])]
+        date = pd.merge(date, new, how='left', on=['DateTime'])
+    # fill nan with pre-LastPx
+    date.ffill(axis=0, inplace=True)
+    date.to_csv(out_path, index=False)
+
+def transfer_sub_table():
+    # def transfer_sub_test_table():
+    sub_test_data = "./sub_test_data.csv"
+    test_set = "./test_set.csv"
+    transfer_table(sub_test_data, test_set)
+
+    # def transfer_sub_train_table():
+    sub_train_data = "./sub_train_data.csv"
+    train_set = "./train_set.csv"
+    transfer_table(sub_train_data, train_set)
+
+    # def transfer_sub_all_table():
+    sub_all_data = "./sub_all_data.csv"
+    all_data_set = "./all_set.csv"
+    transfer_table(sub_all_data, all_data_set)
+
+
+def check_pearson_corr(path):
+    df = pd.read_csv(path)
+    df = df.drop(['DateTime'], axis=1)
+    # plot LastPx
+    df.plot(figsize=(14, 6))
+    plt.savefig('./19_stocks.png')
+    plt.close()
+    # plot percentage
+    df_pc = df.pct_change()
+    df_pc.plot(figsize=(14, 6))
+    plt.savefig('./19_stock_line.png')
+    plt.close()
+    # pair plot
+    sns.pairplot(df.dropna())
+    plt.savefig('./19_stocks_pairplot.png', figsize=(9, 9))
+    plt.close()
+    # calculate corr
+    corr = df.corr(method='pearson', min_periods=1)  # pearson方法计算相关性
+    print(corr)
+    corr.to_csv('./test_set_corr.csv', index=False)
+    # corr heatmap
+    sns.heatmap(corr)
+    plt.savefig('./19_stocks_heatmap.png', figsize=(9,9))
+    plt.close()
 
 
 # pick_stock()
 # stock_data_preprocess()
-write_file()
+# generate_train_test_all_table()
+# generate_sub_test_train_all_table()
+# transfer_sub_table()
+# check_pearson_corr('./test_set.csv')
+
 
 
 
