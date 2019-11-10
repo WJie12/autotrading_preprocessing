@@ -1,0 +1,5 @@
+.idea
+/data/
+/venv/
+*.csv
+!stock_table.csv
