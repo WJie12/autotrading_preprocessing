@@ -125,13 +125,13 @@ def check_pearson_corr(path):
     df = pd.read_csv(path)
     df = df.drop(['DateTime'], axis=1)
     # plot LastPx
-    df.plot(figsize=(14, 6))
-    plt.savefig('./19_stocks.png')
+    df.plot(figsize=(14, 9))
+    plt.savefig('./19_stocks_raw.png')
     plt.close()
     # plot percentage
     df_pc = df.pct_change()
-    df_pc.plot(figsize=(14, 6))
-    plt.savefig('./19_stock_line.png')
+    df_pc.plot(figsize=(14, 9))
+    plt.savefig('./19_stock_pct.png')
     plt.close()
     # pair plot
     sns.pairplot(df.dropna())
@@ -140,7 +140,7 @@ def check_pearson_corr(path):
     # calculate corr
     corr = df.corr(method='pearson', min_periods=1)  # pearson方法计算相关性
     print(corr)
-    corr.to_csv('./test_set_corr.csv', index=False)
+    corr.to_csv('./train_set_corr.csv', index=False)
     # corr heatmap
     sns.heatmap(corr)
     plt.savefig('./19_stocks_heatmap.png', figsize=(9,9))
@@ -152,7 +152,7 @@ def check_pearson_corr(path):
 # generate_train_test_all_table()
 # generate_sub_test_train_all_table()
 # transfer_sub_table()
-# check_pearson_corr('./test_set.csv')
+check_pearson_corr('./train_set.csv')
 
 
 
