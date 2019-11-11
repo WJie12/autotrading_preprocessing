@@ -5,42 +5,6 @@ from sklearn.utils import shuffle
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-
-def concat_all_file(path):
-    flag = True
-    for file in os.listdir(path):
-        print(file)
-        reader = pd.read_csv(os.path.join(path, file, 'Day.csv'), skiprows=1, names=\
-            ['SecurityID', 'DateTime', 'PreClosePx', 'OpenPx', 'HighPx', 'LowPx', 'LastPx',\
-             'Volumne', 'Amount', 'IOPV', 'fp_Volume', 'fp_Amount'
-             ])
-        if flag:
-            big_file = reader
-            flag = False
-        else:
-            big_file = pd.concat([big_file, reader])
-    print("Head of file:\n", big_file.head())
-    print("Row number of file:\n", len(big_file))
-    return big_file
-
-def generate_train_test_all_table():
-    test_path = './data/quot/test'
-    train_path = './data/quot/train'
-
-    print("########Strat: concat test data file..." + '\n')
-    test_file = concat_all_file(test_path)
-    test_file.to_csv('./test_data.csv', index=False)
-    print("########Finish: concat test data file. Length of test file:", len(test_file))
-
-    print("########Strat: concat train data file..." + '\n')
-    train_file = concat_all_file(train_path)
-    train_file.to_csv('./train_data.csv', index=False)
-    print("########Finish: concat trian data file. Length of train file:", len(train_file))
-
-    print("########Strat: concat train data file and test data file..." + '\n')
-    all_file = pd.concat([train_file, test_file])
-    all_file.to_csv('./all_data.csv', index=False)
-
 # pick stock by industry randomly
 def pick_stock():
     # get all stocks: code, name, c_name
@@ -64,27 +28,43 @@ def pick_stock():
     stock_table.to_csv('./stock_table.csv', index=False)
 
 
+def concat_all_file(path):
+    flag = True
+    for file in os.listdir(path):
+        print(file)
+        reader = pd.read_csv(os.path.join(path, file, 'Day.csv'), skiprows=1, names=\
+            ['SecurityID', 'DateTime', 'PreClosePx', 'OpenPx', 'HighPx', 'LowPx', 'LastPx',\
+             'Volumne', 'Amount', 'IOPV', 'fp_Volume', 'fp_Amount'
+             ])
+        if flag:
+            big_file = reader
+            flag = False
+        else:
+            big_file = pd.concat([big_file, reader])
+    print("Head of file:\n", big_file.head())
+    print("Row number of file:\n", len(big_file))
+    return big_file
+
+
+def generate_all_table():
+    data_path = './data/quot/'
+    print("########Strat: concat all data file..." + '\n')
+    all_file = concat_all_file(data_path)
+    all_file.to_csv('./all_data.csv', index=False)
+
+
 def generate_sub_table(in_path, out_path):
     df = pd.read_csv(in_path)
     stock_code_list = pd.read_csv('./stock_table.csv')['code']
     stock_file = df[df['SecurityID'].isin(stock_code_list)]
     stock_file.to_csv(out_path, index=False)
 
-def generate_sub_test_train_all_table():
-    # def generate_sub_test_table():
-    test_data = "./test_data.csv"
-    sub_test_data = "./sub_test_data.csv"
-    generate_sub_table(test_data, sub_test_data)
 
-    # def generate_sub_train_table():
-    train_data = "./train_data.csv"
-    sub_train_data = "./sub_train_data.csv"
-    generate_sub_table(train_data, sub_train_data)
-
-    # def generate_sub_all_table():
+def generate_sub_all_table():
     all_data = "./all_data.csv"
     sub_all_data = "./sub_all_data.csv"
     generate_sub_table(all_data, sub_all_data)
+
 
 def transfer_table(in_path, out_path):
     old_df = pd.read_csv(in_path)
@@ -99,18 +79,8 @@ def transfer_table(in_path, out_path):
     date.ffill(axis=0, inplace=True)
     date.to_csv(out_path, index=False)
 
-def transfer_sub_all_table():
-    # # def transfer_sub_test_table():
-    # sub_test_data = "./sub_test_data.csv"
-    # test_set = "./test_set.csv"
-    # transfer_table(sub_test_data, test_set)
-    #
-    # # def transfer_sub_train_table():
-    # sub_train_data = "./sub_train_data.csv"
-    # train_set = "./train_set.csv"
-    # transfer_table(sub_train_data, train_set)
 
-    # def transfer_sub_all_table():
+def transfer_sub_all_table():
     sub_all_data = "./sub_all_data.csv"
     all_data_set = "./all_set.csv"
     transfer_table(sub_all_data, all_data_set)
@@ -155,12 +125,12 @@ def check_pearson_corr(path):
     plt.close()
 
 
-# generate_train_test_all_table()
 # pick_stock()
-# generate_sub_test_train_all_table()
-# transfer_sub_all_table()
-# generate_test_train_set()
-# check_pearson_corr('./train_set.csv')
+generate_all_table()
+generate_sub_all_table()
+transfer_sub_all_table()
+generate_test_train_set()
+check_pearson_corr('./train_set.csv')
 
 
 
