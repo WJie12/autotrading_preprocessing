@@ -38,7 +38,7 @@ def generate_train_test_all_table():
     print("########Finish: concat trian data file. Length of train file:", len(train_file))
 
     print("########Strat: concat train data file and test data file..." + '\n')
-    all_file = pd.concat([test_file, train_file])
+    all_file = pd.concat([train_file, test_file])
     all_file.to_csv('./all_data.csv', index=False)
 
 # pick stock by industry randomly
@@ -94,25 +94,36 @@ def transfer_table(in_path, out_path):
         new = old_df[old_df['SecurityID'].isin([stock_code_lsit[i]])][['DateTime', 'LastPx']]
         new.columns = ['DateTime', str(stock_code_lsit[i])]
         date = pd.merge(date, new, how='left', on=['DateTime'])
+    date = date.sort_values(['DateTime'])
     # fill nan with pre-LastPx
     date.ffill(axis=0, inplace=True)
     date.to_csv(out_path, index=False)
 
-def transfer_sub_table():
-    # def transfer_sub_test_table():
-    sub_test_data = "./sub_test_data.csv"
-    test_set = "./test_set.csv"
-    transfer_table(sub_test_data, test_set)
-
-    # def transfer_sub_train_table():
-    sub_train_data = "./sub_train_data.csv"
-    train_set = "./train_set.csv"
-    transfer_table(sub_train_data, train_set)
+def transfer_sub_all_table():
+    # # def transfer_sub_test_table():
+    # sub_test_data = "./sub_test_data.csv"
+    # test_set = "./test_set.csv"
+    # transfer_table(sub_test_data, test_set)
+    #
+    # # def transfer_sub_train_table():
+    # sub_train_data = "./sub_train_data.csv"
+    # train_set = "./train_set.csv"
+    # transfer_table(sub_train_data, train_set)
 
     # def transfer_sub_all_table():
     sub_all_data = "./sub_all_data.csv"
     all_data_set = "./all_set.csv"
     transfer_table(sub_all_data, all_data_set)
+
+
+def generate_test_train_set():
+    sub_all_set = pd.read_csv('./all_set.csv')
+
+    train_set = sub_all_set.loc[(sub_all_set.DateTime < 20180000)]
+    train_set.to_csv('./train_set.csv', index=False)
+
+    test_set = sub_all_set.loc[(sub_all_set.DateTime > 20180000)]
+    test_set.to_csv('./test_set.csv', index=False)
 
 
 def check_pearson_corr(path):
@@ -124,6 +135,7 @@ def check_pearson_corr(path):
     plt.close()
     # plot percentage
     df_pc = df.pct_change()
+    df_pc.to_csv('./19_stocks_pct_change_on_train_set.csv')
     df_pc.plot(figsize=(14, 9))
     plt.savefig('./19_stock_pct.png')
     plt.close()
@@ -146,8 +158,10 @@ def check_pearson_corr(path):
 # generate_train_test_all_table()
 # pick_stock()
 # generate_sub_test_train_all_table()
-# transfer_sub_table()
-check_pearson_corr('./train_set.csv')
+# transfer_sub_all_table()
+# generate_test_train_set()
+# check_pearson_corr('./train_set.csv')
+
 
 
 
