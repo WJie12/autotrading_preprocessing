@@ -1,6 +1,7 @@
 .idea
 /data/
 /venv/
+/backupdata
 *.csv
 *.svg
 !stock_table.csv

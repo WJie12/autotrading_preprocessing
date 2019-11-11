@@ -14,11 +14,19 @@ train_set_corr.csv: correlation data table
 
 19_stock_pct.png:  percentage(LastPx/PreClosePx) of every stock form 2014 to 2017
 
+![19_stock_pct](D:\pycharm_workspace\autotrading\19_stock_pct.png)
+
 19_stock_raw.png: LastPx of every stock form 2014 to 2017
+
+![19_stock_raw](D:\pycharm_workspace\autotrading\19_stocks_raw.png)
 
 19_stock_heatmap.png: heatmap of 19 stocks which shows the correlation of every 2 stocks. 
 
-19_tock_pairplot.png: pairplot graph of 19 stocks which shows the correlation of every 2 stocks. 
+![19_stock_heatmap](D:\pycharm_workspace\autotrading\19_stocks_heatmap.png)
+
+19_tock_pairplot.png: pairplot graph of 19 stocks which shows the correlation of every 2 stocks.
+
+![19_tock_pairplot](D:\pycharm_workspace\autotrading\19_stocks_pairplot.png) 
 
 ## Data preprocess: Train set, Test set
 

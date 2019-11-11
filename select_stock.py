@@ -45,30 +45,24 @@ def generate_train_test_all_table():
 def pick_stock():
     # get all stocks: code, name, c_name
     df = ts.get_industry_classified()
+    # get stocks from 5 industries
+    industry_list = ['汽车制造', '生物制药', '电子信息', '传媒娱乐', '家电行业']
+    df = df.loc[df.c_name.isin(industry_list)]
     # filter stocks, 600* means Stocks of SH
     df_sh = df[(df.code.str.startswith('600'))]
     # shuffle
     df_sh_shuffle = shuffle(df_sh)
-    # pick 1 stock from every industry
-    stock_table_all_c = df_sh_shuffle.drop_duplicates(subset=['c_name'], keep='first')
-    # pick 19 stocks randomly
-    stock_table = stock_table_all_c.sample(n=19)
+    # stock_table_all_c = df_sh_shuffle.drop_duplicates(subset=['c_name'], keep='first')
+    stock_table_all_c = df_sh_shuffle.groupby(['c_name'], as_index=False)
+    # pick 4 stocks from every industry
+    stock_table_all_c_group = stock_table_all_c.apply(lambda _stock_table_all_c: _stock_table_all_c.sample(n=4))
+    stock_table_all_c_df = pd.DataFrame(stock_table_all_c_group)
+    # pick 19 stocks randomly, sort by c_name
+    stock_table = stock_table_all_c_df.sample(n=19).sort_values(['c_name'])
     print(stock_table)
     # save stock table
     stock_table.to_csv('./stock_table.csv', index=False)
 
-
-def stock_data_preprocess():
-    pro = ts.pro_api()
-    s_qjd = '600597'
-    s_gm = '600033' #福建高速
-    start_date = '2016-01-01'#起止日期
-    end_date = '2016-12-31'
-    df_qjd = pro.daily(ts_code=s_qjd, start_date=start_date, end_date=end_date)
-    df_gm = pro.daily(ts_code=s_gm, start_date=start_date, end_date=end_date)
-    df = pd.concat([df_qjd.close,df_gm.close], axis = 1, keys=['qjd_close', 'gm_close'])#合并
-    df.ffill(axis=0, inplace=True) #填充缺失数据
-    df.to_csv('qjd_gm.csv')
 
 def generate_sub_table(in_path, out_path):
     df = pd.read_csv(in_path)
@@ -147,12 +141,11 @@ def check_pearson_corr(path):
     plt.close()
 
 
-# pick_stock()
-# stock_data_preprocess()
 # generate_train_test_all_table()
+# pick_stock()
 # generate_sub_test_train_all_table()
 # transfer_sub_table()
-check_pearson_corr('./train_set.csv')
+# check_pearson_corr('./train_set.csv')
 
 
 
