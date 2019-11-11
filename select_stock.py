@@ -128,16 +128,18 @@ def check_pearson_corr(path):
     plt.savefig('./19_stock_pct.png')
     plt.close()
     # pair plot
+    plt.figure(figsize=(15, 10))
     sns.pairplot(df.dropna())
-    plt.savefig('./19_stocks_pairplot.png', figsize=(9, 9))
+    plt.savefig('./19_stocks_pairplot.png')
     plt.close()
     # calculate corr
     corr = df.corr(method='pearson', min_periods=1)  # pearson方法计算相关性
     print(corr)
     corr.to_csv('./train_set_corr.csv', index=False)
     # corr heatmap
+    plt.figure(figsize=(15, 10))
     sns.heatmap(corr)
-    plt.savefig('./19_stocks_heatmap.png', figsize=(9,9))
+    plt.savefig('./19_stocks_heatmap.png')
     plt.close()
 
 
@@ -145,7 +147,7 @@ def check_pearson_corr(path):
 # pick_stock()
 # generate_sub_test_train_all_table()
 # transfer_sub_table()
-# check_pearson_corr('./train_set.csv')
+check_pearson_corr('./train_set.csv')
 
 
 
