@@ -163,6 +163,7 @@ def transfer_sub_all_table_key():
         date.columns = newcol
         date.to_csv(out_path, index=False)
 
+
 def generate_all_set_key():
     col = ['OpenPx', 'HighPx', 'LowPx', 'LastPx', 'Volumne']
     for i in col:
@@ -178,5 +179,8 @@ def generate_all_set_key():
 
 # generate_all_set_key()
 # transfer_sub_all_table_key()
-preprocess_sub_all_data()
+# preprocess_sub_all_data()
+with h5py.File('stock_history.h5', 'r') as f:
+    history = f['history'][:]
+print(history)
 
