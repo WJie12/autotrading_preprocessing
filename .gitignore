@@ -9,3 +9,5 @@
 !train_set.csv
 !all_set.csv
 !train_set_corr.csv
+!600*.csv
+

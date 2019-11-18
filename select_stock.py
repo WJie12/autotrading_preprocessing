@@ -1,9 +1,11 @@
 import tushare as ts
 import pandas as pd
+import numpy as np
 import os
 from sklearn.utils import shuffle
 import matplotlib.pyplot as plt
 import seaborn as sns
+import h5py
 
 # pick stock by industry randomly
 def pick_stock():
@@ -34,7 +36,7 @@ def concat_all_file(path):
         print(file)
         reader = pd.read_csv(os.path.join(path, file, 'Day.csv'), skiprows=1, names=\
             ['SecurityID', 'DateTime', 'PreClosePx', 'OpenPx', 'HighPx', 'LowPx', 'LastPx',\
-             'Volumne', 'Amount', 'IOPV', 'fp_Volume', 'fp_Amount'
+             'Volume', 'Amount', 'IOPV', 'fp_Volume', 'fp_Amount'
              ])
         if flag:
             big_file = reader
@@ -66,24 +68,26 @@ def generate_sub_all_table():
     generate_sub_table(all_data, sub_all_data)
 
 
-def transfer_table(in_path, out_path):
+def transfer_table(in_path, out_path, key):
     old_df = pd.read_csv(in_path)
     stock_code_lsit = old_df['SecurityID'].unique()
     date = old_df.drop_duplicates(subset=['DateTime'], keep='first').loc[:, ['DateTime']]
     for i in range(len(stock_code_lsit)):
-        new = old_df[old_df['SecurityID'].isin([stock_code_lsit[i]])][['DateTime', 'LastPx']]
+        new = old_df[old_df['SecurityID'].isin([stock_code_lsit[i]])][['DateTime', key]]
         new.columns = ['DateTime', str(stock_code_lsit[i])]
         date = pd.merge(date, new, how='left', on=['DateTime'])
     date = date.sort_values(['DateTime'])
     # fill nan with pre-LastPx
     date.ffill(axis=0, inplace=True)
+    date.bfill(axis=0, inplace=True)
     date.to_csv(out_path, index=False)
 
 
 def transfer_sub_all_table():
     sub_all_data = "./sub_all_data.csv"
     all_data_set = "./all_set.csv"
-    transfer_table(sub_all_data, all_data_set)
+    key = 'LastPx'
+    transfer_table(sub_all_data, all_data_set, key)
 
 
 def generate_test_train_set():
@@ -125,14 +129,54 @@ def check_pearson_corr(path):
     plt.close()
 
 
+def preprocess_sub_all_data():
+    h5_file_path = './stock_history.h5'
+    stock_code_list = pd.read_csv('./stock_table.csv')['code']
+    l = []
+    for key in stock_code_list:
+        path = str(key)+'.csv'
+        reader = pd.read_csv(path)
+        l.append(reader.values)
+        print(reader.shape)
+    history = np.array(l)
+
+    with h5py.File(h5_file_path, 'w') as f:
+        f.create_dataset('history', data=history)
+
+
+def transfer_sub_all_table_key():
+    sub_all_data = "./sub_all_data.csv"
+    col = ['DateTime','OpenPx', 'HighPx', 'LowPx', 'LastPx', 'Volumne']
+    newcol = ['Open','High','low','Close','Volume']
+    old_df = pd.read_csv(sub_all_data)
+    stock_code_lsit = old_df['SecurityID'].unique()
+    for i in range(len(stock_code_lsit)):
+        date = old_df.drop_duplicates(subset=['DateTime'], keep='first').loc[:, ['DateTime']]
+        out_path = str(stock_code_lsit[i]) + '.csv'
+        new = old_df[old_df['SecurityID'].isin([stock_code_lsit[i]])][col]
+        date = pd.merge(date, new, how='left', on=['DateTime'])
+        date = date.sort_values(['DateTime'])
+        # fill nan with pre-LastPx
+        date.ffill(axis=0, inplace=True)
+        date.bfill(axis=0, inplace=True)
+        date = date.drop(columns=['DateTime'])
+        date.columns = newcol
+        date.to_csv(out_path, index=False)
+
+def generate_all_set_key():
+    col = ['OpenPx', 'HighPx', 'LowPx', 'LastPx', 'Volumne']
+    for i in col:
+        transfer_sub_all_table_key(i)
+
+
 # pick_stock()
-generate_all_table()
-generate_sub_all_table()
-transfer_sub_all_table()
-generate_test_train_set()
-check_pearson_corr('./train_set.csv')
+# generate_all_table()
+# generate_sub_all_table()
+# transfer_sub_all_table()
+# generate_test_train_set()
+# check_pearson_corr('./train_set.csv')
 
-
-
-
+# generate_all_set_key()
+# transfer_sub_all_table_key()
+preprocess_sub_all_data()
 
