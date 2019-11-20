@@ -131,12 +131,12 @@ def generate_test_train_set():
     :return: 
     """
     sub_all_set = pd.read_csv('./all_set.csv')
-    sub_all_set['DateTime'] = pd.to_datetime(sub_all_set['DateTime'], format='%Y-%m-%d')
+    # sub_all_set['DateTime'] = pd.to_datetime(sub_all_set['DateTime'], format='%Y-%m-%d')
 
-    train_set = sub_all_set.loc[(sub_all_set.DateTime < '2018-01-01')]
+    train_set = sub_all_set.loc[(sub_all_set.DateTime < 20180000)]
     train_set.to_csv('./train_set.csv', index=False)
 
-    test_set = sub_all_set.loc[(sub_all_set.DateTime >= '2018-01-01')]
+    test_set = sub_all_set.loc[(sub_all_set.DateTime >= 20180000)]
     test_set.to_csv('./test_set.csv', index=False)
 
 
@@ -232,6 +232,7 @@ def generate_one_stock_set(stock_code):
     col = ['DateTime', 'OpenPx', 'HighPx', 'LowPx', 'LastPx', 'Volumne']
     newcol = ['Open', 'High', 'low', 'Close', 'Volume']
     date = old_df.drop_duplicates(subset=['DateTime'], keep='first').loc[:, ['DateTime']]
+    date.to_csv('datetime.csv', index=False)
     out_path = str(stock_code) + '.csv'
     new = old_df[old_df['SecurityID'].isin([stock_code])][col]
     date = pd.merge(date, new, how='left', on=['DateTime'])
