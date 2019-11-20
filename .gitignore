@@ -1,6 +1,7 @@
 .idea
 /data/
 /venv/
+/test/
 /backupdata
 *.csv
 *.svg
@@ -9,5 +10,7 @@
 !train_set.csv
 !all_set.csv
 !train_set_corr.csv
-!600*.csv
+!*.h5
+!/test/stock_table.csv
+
 

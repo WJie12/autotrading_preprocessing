@@ -7,8 +7,12 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import h5py
 
-# pick stock by industry randomly
+
 def pick_stock():
+    """ pick stocks by industry
+    
+    :return: write 19 stocks into 'stock_table.csv'
+    """
     # get all stocks: code, name, c_name
     df = ts.get_industry_classified()
     # get stocks from 5 industries
@@ -31,6 +35,10 @@ def pick_stock():
 
 
 def concat_all_file(path):
+    """ concat origin file: Day.csv
+    :param path: the path of file folder which contains Day.csv
+    :return: contacted file in pd.DataFrame format
+    """
     flag = True
     for file in os.listdir(path):
         print(file)
@@ -49,6 +57,9 @@ def concat_all_file(path):
 
 
 def generate_all_table():
+    """ Concat all data file and write them into one csv file
+    :return: write into 'all_data.csv'
+    """
     data_path = './data/quot/'
     print("########Strat: concat all data file..." + '\n')
     all_file = concat_all_file(data_path)
@@ -56,6 +67,12 @@ def generate_all_table():
 
 
 def generate_sub_table(in_path, out_path):
+    """ Select stocks data from in_path and write into out_path
+    Select by stock_code in 'stock_table.csv'
+    :param in_path: input data file path
+    :param out_path: output data file path
+    :return: write into csv of out_path
+    """
     df = pd.read_csv(in_path)
     stock_code_list = pd.read_csv('./stock_table.csv')['code']
     stock_file = df[df['SecurityID'].isin(stock_code_list)]
@@ -63,17 +80,33 @@ def generate_sub_table(in_path, out_path):
 
 
 def generate_sub_all_table():
+    """ Select 19 stocks data from origin all data csv and write into new csv file
+    :return: write into 'sub_all_data.csv'
+    """
     all_data = "./all_data.csv"
     sub_all_data = "./sub_all_data.csv"
     generate_sub_table(all_data, sub_all_data)
 
 
 def transfer_table(in_path, out_path, key):
+    """ Transfer table
+    output csv file:
+    columns name: stock code
+    row name: datetime
+    cell value: key
+    
+    :param in_path: input file path
+    :param out_path: 
+    :param key: the name of column that you want to keep, such as 'LastPx'
+    :return: 
+    """
     old_df = pd.read_csv(in_path)
     stock_code_lsit = old_df['SecurityID'].unique()
-    date = old_df.drop_duplicates(subset=['DateTime'], keep='first').loc[:, ['DateTime']]
+    # date = old_df.drop_duplicates(subset=['DateTime'], keep='first').loc[:, ['DateTime']]
+    date = generate_datetime('20140102', '20190822')
     for i in range(len(stock_code_lsit)):
         new = old_df[old_df['SecurityID'].isin([stock_code_lsit[i]])][['DateTime', key]]
+        new['DateTime'] = pd.to_datetime(new['DateTime'], format='%Y%m%d')
         new.columns = ['DateTime', str(stock_code_lsit[i])]
         date = pd.merge(date, new, how='left', on=['DateTime'])
     date = date.sort_values(['DateTime'])
@@ -84,6 +117,9 @@ def transfer_table(in_path, out_path, key):
 
 
 def transfer_sub_all_table():
+    """ Transfer table generate 19 stocks close price table
+    :return: 
+    """
     sub_all_data = "./sub_all_data.csv"
     all_data_set = "./all_set.csv"
     key = 'LastPx'
@@ -91,16 +127,26 @@ def transfer_sub_all_table():
 
 
 def generate_test_train_set():
+    """ Split train set and test set
+    train set: 2014-2017
+    test set: 2018-2019
+    :return: 
+    """
     sub_all_set = pd.read_csv('./all_set.csv')
+    sub_all_set['DateTime'] = pd.to_datetime(sub_all_set['DateTime'], format='%Y-%m-%d')
 
-    train_set = sub_all_set.loc[(sub_all_set.DateTime < 20180000)]
+    train_set = sub_all_set.loc[(sub_all_set.DateTime < '2018-01-01')]
     train_set.to_csv('./train_set.csv', index=False)
 
-    test_set = sub_all_set.loc[(sub_all_set.DateTime > 20180000)]
+    test_set = sub_all_set.loc[(sub_all_set.DateTime >= '2018-01-01')]
     test_set.to_csv('./test_set.csv', index=False)
 
 
 def check_pearson_corr(path):
+    """ Check pearson correlation and draw graph
+    :param path: 
+    :return: 
+    """
     df = pd.read_csv(path)
     df = df.drop(['DateTime'], axis=1)
     # plot LastPx
@@ -130,64 +176,92 @@ def check_pearson_corr(path):
 
 
 def preprocess_sub_all_data():
+    """ Generate datafile for GGPD: Create 3-D matrix and store into .h5 file
+    history: stock * daytime * feature (19 * 2059 * 5)
+    :return:
+    """
     h5_file_path = './stock_history.h5'
     stock_code_list = pd.read_csv('./stock_table.csv')['code']
-    l = []
+    stock_table_list = []
     for key in stock_code_list:
         path = str(key)+'.csv'
         reader = pd.read_csv(path)
-        l.append(reader.values)
+        stock_table_list.append(reader.values)
         print(reader.shape)
-    history = np.array(l)
+    history = np.array(stock_table_list)
 
     with h5py.File(h5_file_path, 'w') as f:
         f.create_dataset('history', data=history)
 
 
-def transfer_sub_all_table_key():
-    sub_all_data = "./sub_all_data.csv"
-    col = ['DateTime', 'OpenPx', 'HighPx', 'LowPx', 'LastPx', 'Volumne']
-    newcol = ['Open', 'High', 'low', 'Close', 'Volume']
-    old_df = pd.read_csv(sub_all_data)
-    stock_code_lsit = old_df['SecurityID'].unique()
-    datetime = pd.date_range('20140102', '20190822', freq='D')
+def generate_datetime(start, end):
+    """ Generate datetime range
+    :param start: start time, string ,'%Y-%m-%d'
+    :param end: end time, string, '%Y-%m-%d'
+    :return: datetime, 1 column DataFrame
+    """
+    datetime = pd.date_range(start, end, freq='D')
     pydate_array = datetime.to_pydatetime()
     date_only_array = np.vectorize(lambda s: s.strftime('%Y-%m-%d'))(pydate_array)
     datetime = pd.DataFrame(date_only_array)
     datetime.columns = ['DateTime']
     datetime['DateTime'] = pd.to_datetime(datetime['DateTime'], format='%Y-%m-%d')
     datetime.to_csv('datetime.csv', index=False)
-    for i in range(len(stock_code_lsit)):
-        out_path = str(stock_code_lsit[i]) + '.csv'
-        new = old_df[old_df['SecurityID'].isin([stock_code_lsit[i]])][col]
-        new['DateTime'] = pd.to_datetime(new['DateTime'], format='%Y%m%d')
-        date = pd.merge(datetime, new, how='left', on=['DateTime'])
-        date = date.sort_values(['DateTime'])
-        # fill nan with pre-LastPx
-        date.ffill(axis=0, inplace=True)
-        date.bfill(axis=0, inplace=True)
-        date = date.drop(columns=['DateTime'])
-        date.columns = newcol
-        date.to_csv(out_path, index=False)
+    return datetime
 
 
-def generate_all_set_key():
-    col = ['OpenPx', 'HighPx', 'LowPx', 'LastPx', 'Volumne']
-    for i in col:
-        transfer_sub_all_table_key(i)
+def transfer_sub_all_table_key():
+    """ Select 19 stocks data from origin all data csv.
+    Write open, high, low, close, volume of each stock into desperate csv file.
+    :return:
+    """
+    stock_path = "./stock_table.csv"
+    stock_table = pd.read_csv(stock_path)
+    stock_code_list = stock_table['code'].unique()
+    for i in range(len(stock_code_list)):
+        generate_one_stock_set(stock_code_list[i])
 
+
+
+def h5_file_test():
+    with h5py.File('stock_history.h5', 'r') as f:
+        history = f['history'][:]
+    print(history)
+
+
+def generate_one_stock_set(stock_code):
+    in_path = "all_data.csv"
+    old_df = pd.read_csv(in_path)
+    col = ['DateTime', 'OpenPx', 'HighPx', 'LowPx', 'LastPx', 'Volumne']
+    newcol = ['Open', 'High', 'low', 'Close', 'Volume']
+    datetime = generate_datetime('20140102', '20190822')
+    out_path = str(stock_code) + '.csv'
+    # select columns
+    new = old_df[old_df['SecurityID'].isin([stock_code])][col]
+    # transfer datetime column format
+    new['DateTime'] = pd.to_datetime(new['DateTime'], format='%Y%m%d')
+    date = pd.merge(datetime, new, how='left', on=['DateTime'])
+    date = date.sort_values(['DateTime'])
+    # fill nan with pre-LastPx
+    date.ffill(axis=0, inplace=True)
+    date.bfill(axis=0, inplace=True)
+    date = date.drop(columns=['DateTime'])
+    # rename columns
+    date.columns = newcol
+    date.to_csv(out_path, index=False)
+
+
+# generate_all_table()
+# generate_one_stock_set('000001')
 
 # pick_stock()
-# generate_all_table()
 # generate_sub_all_table()
+#
 # transfer_sub_all_table()
 # generate_test_train_set()
 # check_pearson_corr('./train_set.csv')
 
-# generate_all_set_key()
-# transfer_sub_all_table_key()
-# preprocess_sub_all_data()
-with h5py.File('stock_history.h5', 'r') as f:
-    history = f['history'][:]
-print(history)
+transfer_sub_all_table_key()
+preprocess_sub_all_data()
+h5_file_test()
 
