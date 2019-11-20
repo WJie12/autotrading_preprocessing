@@ -2,7 +2,7 @@
 /data/
 /venv/
 /test/
-/backupdata
+/train
 *.csv
 *.svg
 !stock_table.csv

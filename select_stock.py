@@ -102,11 +102,9 @@ def transfer_table(in_path, out_path, key):
     """
     old_df = pd.read_csv(in_path)
     stock_code_lsit = old_df['SecurityID'].unique()
-    # date = old_df.drop_duplicates(subset=['DateTime'], keep='first').loc[:, ['DateTime']]
-    date = generate_datetime('20140102', '20190822')
+    date = old_df.drop_duplicates(subset=['DateTime'], keep='first').loc[:, ['DateTime']]
     for i in range(len(stock_code_lsit)):
         new = old_df[old_df['SecurityID'].isin([stock_code_lsit[i]])][['DateTime', key]]
-        new['DateTime'] = pd.to_datetime(new['DateTime'], format='%Y%m%d')
         new.columns = ['DateTime', str(stock_code_lsit[i])]
         date = pd.merge(date, new, how='left', on=['DateTime'])
     date = date.sort_values(['DateTime'])
@@ -194,20 +192,20 @@ def preprocess_sub_all_data():
         f.create_dataset('history', data=history)
 
 
-def generate_datetime(start, end):
-    """ Generate datetime range
-    :param start: start time, string ,'%Y-%m-%d'
-    :param end: end time, string, '%Y-%m-%d'
-    :return: datetime, 1 column DataFrame
-    """
-    datetime = pd.date_range(start, end, freq='D')
-    pydate_array = datetime.to_pydatetime()
-    date_only_array = np.vectorize(lambda s: s.strftime('%Y-%m-%d'))(pydate_array)
-    datetime = pd.DataFrame(date_only_array)
-    datetime.columns = ['DateTime']
-    datetime['DateTime'] = pd.to_datetime(datetime['DateTime'], format='%Y-%m-%d')
-    datetime.to_csv('datetime.csv', index=False)
-    return datetime
+# def generate_datetime(start, end):
+#     """ Generate datetime range
+#     :param start: start time, string ,'%Y-%m-%d'
+#     :param end: end time, string, '%Y-%m-%d'
+#     :return: datetime, 1 column DataFrame
+#     """
+#     datetime = pd.date_range(start, end, freq='D')
+#     pydate_array = datetime.to_pydatetime()
+#     date_only_array = np.vectorize(lambda s: s.strftime('%Y-%m-%d'))(pydate_array)
+#     datetime = pd.DataFrame(date_only_array)
+#     datetime.columns = ['DateTime']
+#     datetime['DateTime'] = pd.to_datetime(datetime['DateTime'], format='%Y-%m-%d')
+#     datetime.to_csv('datetime.csv', index=False)
+#     return datetime
 
 
 def transfer_sub_all_table_key():
@@ -222,7 +220,6 @@ def transfer_sub_all_table_key():
         generate_one_stock_set(stock_code_list[i])
 
 
-
 def h5_file_test():
     with h5py.File('stock_history.h5', 'r') as f:
         history = f['history'][:]
@@ -234,32 +231,28 @@ def generate_one_stock_set(stock_code):
     old_df = pd.read_csv(in_path)
     col = ['DateTime', 'OpenPx', 'HighPx', 'LowPx', 'LastPx', 'Volumne']
     newcol = ['Open', 'High', 'low', 'Close', 'Volume']
-    datetime = generate_datetime('20140102', '20190822')
+    date = old_df.drop_duplicates(subset=['DateTime'], keep='first').loc[:, ['DateTime']]
     out_path = str(stock_code) + '.csv'
-    # select columns
     new = old_df[old_df['SecurityID'].isin([stock_code])][col]
-    # transfer datetime column format
-    new['DateTime'] = pd.to_datetime(new['DateTime'], format='%Y%m%d')
-    date = pd.merge(datetime, new, how='left', on=['DateTime'])
+    date = pd.merge(date, new, how='left', on=['DateTime'])
     date = date.sort_values(['DateTime'])
     # fill nan with pre-LastPx
     date.ffill(axis=0, inplace=True)
     date.bfill(axis=0, inplace=True)
     date = date.drop(columns=['DateTime'])
-    # rename columns
     date.columns = newcol
     date.to_csv(out_path, index=False)
 
 
 # generate_all_table()
-# generate_one_stock_set('000001')
+generate_one_stock_set('000001')
 
 # pick_stock()
-# generate_sub_all_table()
-#
-# transfer_sub_all_table()
-# generate_test_train_set()
-# check_pearson_corr('./train_set.csv')
+generate_sub_all_table()
+
+transfer_sub_all_table()
+generate_test_train_set()
+check_pearson_corr('./train_set.csv')
 
 transfer_sub_all_table_key()
 preprocess_sub_all_data()
