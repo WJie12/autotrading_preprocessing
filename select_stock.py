@@ -146,15 +146,22 @@ def preprocess_sub_all_data():
 
 def transfer_sub_all_table_key():
     sub_all_data = "./sub_all_data.csv"
-    col = ['DateTime','OpenPx', 'HighPx', 'LowPx', 'LastPx', 'Volumne']
-    newcol = ['Open','High','low','Close','Volume']
+    col = ['DateTime', 'OpenPx', 'HighPx', 'LowPx', 'LastPx', 'Volumne']
+    newcol = ['Open', 'High', 'low', 'Close', 'Volume']
     old_df = pd.read_csv(sub_all_data)
     stock_code_lsit = old_df['SecurityID'].unique()
+    datetime = pd.date_range('20140102', '20190822', freq='D')
+    pydate_array = datetime.to_pydatetime()
+    date_only_array = np.vectorize(lambda s: s.strftime('%Y-%m-%d'))(pydate_array)
+    datetime = pd.DataFrame(date_only_array)
+    datetime.columns = ['DateTime']
+    datetime['DateTime'] = pd.to_datetime(datetime['DateTime'], format='%Y-%m-%d')
+    datetime.to_csv('datetime.csv', index=False)
     for i in range(len(stock_code_lsit)):
-        date = old_df.drop_duplicates(subset=['DateTime'], keep='first').loc[:, ['DateTime']]
         out_path = str(stock_code_lsit[i]) + '.csv'
         new = old_df[old_df['SecurityID'].isin([stock_code_lsit[i]])][col]
-        date = pd.merge(date, new, how='left', on=['DateTime'])
+        new['DateTime'] = pd.to_datetime(new['DateTime'], format='%Y%m%d')
+        date = pd.merge(datetime, new, how='left', on=['DateTime'])
         date = date.sort_values(['DateTime'])
         # fill nan with pre-LastPx
         date.ffill(axis=0, inplace=True)
