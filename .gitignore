@@ -3,6 +3,7 @@
 /venv/
 /test/
 /train
+/minute/
 *.csv
 *.svg
 !stock_table.csv

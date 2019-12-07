@@ -42,10 +42,10 @@ def concat_all_file(path):
     flag = True
     for file in os.listdir(path):
         print(file)
-        reader = pd.read_csv(os.path.join(path, file, 'Day.csv'), skiprows=1, names=\
-            ['SecurityID', 'DateTime', 'PreClosePx', 'OpenPx', 'HighPx', 'LowPx', 'LastPx',\
-             'Volume', 'Amount', 'IOPV', 'fp_Volume', 'fp_Amount'
-             ])
+        reader = pd.read_csv(os.path.join(path, file, 'Day.csv'), skiprows=1, names=
+                ['SecurityID', 'DateTime', 'PreClosePx', 'OpenPx', 'HighPx', 'LowPx', 'LastPx',\
+                 'Volume', 'Amount', 'IOPV', 'fp_Volume', 'fp_Amount'
+                 ])
         if flag:
             big_file = reader
             flag = False
@@ -101,12 +101,13 @@ def transfer_table(in_path, out_path, key):
     :return: 
     """
     old_df = pd.read_csv(in_path)
-    stock_code_lsit = old_df['SecurityID'].unique()
-    date = old_df.drop_duplicates(subset=['DateTime'], keep='first').loc[:, ['DateTime']]
-    for i in range(len(stock_code_lsit)):
-        new = old_df[old_df['SecurityID'].isin([stock_code_lsit[i]])][['DateTime', key]]
-        new.columns = ['DateTime', str(stock_code_lsit[i])]
-        date = pd.merge(date, new, how='left', on=['DateTime'])
+    stock_code_list = old_df['SecurityID'].unique()
+    date = old_df.drop_duplicates(subset=['DateTime'], keep='first').loc[:, ['DateTime']].astype("float32")
+    for i in range(len(stock_code_list)):
+        print("handling {} now \n".format(stock_code_list[i]))
+        new = old_df[old_df['SecurityID'].isin([stock_code_list[i]])][['DateTime', key]].astype("float32")
+        new.columns = ['DateTime', str(stock_code_list[i])]
+        date = pd.merge(date, new, how='left', on=['DateTime']).astype("float32")
     date = date.sort_values(['DateTime'])
     # fill nan with pre-LastPx
     date.ffill(axis=0, inplace=True)
@@ -245,17 +246,61 @@ def generate_one_stock_set(stock_code):
     date.to_csv(out_path, index=False)
 
 
+def generate_minute_data():
+    path = '/zlab/data/jiewang/cs277/his_sh1/'
+    flag = True
+    stock_code_list = pd.read_csv('minute/stock_table.csv')['code']
+    for file in os.listdir(path):
+        print(file)
+        try:
+            reader = pd.read_csv(os.path.join(path, file, 'Minute.csv'), skiprows=1, names= \
+                    ['SecurityID', 'DateTime', 'PreClosePx', 'OpenPx', 'HighPx', 'LowPx', 'LastPx', \
+                     'Volume', 'Amount', 'IOPV', 'fp_Volume', 'fp_Amount'
+                     ])
+            reader = reader[reader['SecurityID'].isin(stock_code_list)]
+        except FileNotFoundError:
+            print("File {} is not found.".format(os.path.join(path, file, 'Minute.csv')))
+        except PermissionError:
+            print("You don't have permission to access this file {}.".format(os.path.join(path, file, 'Minute.csv')))
+        if flag:
+            big_file = reader
+            flag = False
+        else:
+            big_file = pd.concat([big_file, reader])
+    print("Head of file:\n", big_file.head())
+    print("Row number of file:\n", len(big_file))
+    big_file.to_csv('minute/sub_all_data.csv', index=False)
+
+
+def transfer_table_minute():
+    in_path = 'minute/sub_all_data.csv'
+    df = pd.read_csv(in_path).iloc[:, [0, 1, 6]]
+    df[df == 0] = np.nan
+    df = df.drop_duplicates(subset=["DateTime", "SecurityID"], keep='first')
+    temp = df.pivot(index='DateTime', columns='SecurityID', values='LastPx').reset_index()
+    temp.ffill(axis=0, inplace=True)
+    temp.bfill(axis=0, inplace=True)
+    temp.to_csv("minute/all_set.csv", index=False)
+
+
+# path = '/home/jiewang/autotrading_preprocessing/minute'
+# print(os.getcwd())
+# os.chdir(path)
+# print(os.getcwd())
+
 # generate_all_table()
-generate_one_stock_set('000001')
+# generate_one_stock_set('000001')
+#
+# # pick_stock()
+# generate_sub_all_table()
+#
+# transfer_sub_all_table()
+# generate_test_train_set()
+# check_pearson_corr('./train_set.csv')
+#
+# transfer_sub_all_table_key()
+# preprocess_sub_all_data()
+# h5_file_test()
 
-# pick_stock()
-generate_sub_all_table()
-
-transfer_sub_all_table()
-generate_test_train_set()
-check_pearson_corr('./train_set.csv')
-
-transfer_sub_all_table_key()
-preprocess_sub_all_data()
-h5_file_test()
-
+# generate_minute_data()
+transfer_table_minute()
