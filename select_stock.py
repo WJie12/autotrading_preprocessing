@@ -245,10 +245,10 @@ def generate_one_stock_set(stock_code):
     date.to_csv(out_path, index=False)
 
 
-# generate_all_table()
-generate_one_stock_set('000001')
+generate_all_table()
+# generate_one_stock_set('000001')
 
-# pick_stock()
+pick_stock()
 generate_sub_all_table()
 
 transfer_sub_all_table()
