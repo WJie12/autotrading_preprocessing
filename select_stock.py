@@ -246,13 +246,6 @@ def generate_one_stock_set(stock_code):
     date.to_csv(out_path, index=False)
 
 
-<<<<<<< HEAD
-generate_all_table()
-# generate_one_stock_set('000001')
-
-pick_stock()
-generate_sub_all_table()
-=======
 def generate_minute_data():
     path = '/zlab/data/jiewang/cs277/his_sh1/'
     flag = True
@@ -288,27 +281,28 @@ def transfer_table_minute():
     temp.ffill(axis=0, inplace=True)
     temp.bfill(axis=0, inplace=True)
     temp.to_csv("minute/all_set.csv", index=False)
->>>>>>> ccb7ffd8a0608d1c628330a9a0495fc72bd6ed86
 
 
-# path = '/home/jiewang/autotrading_preprocessing/minute'
-# print(os.getcwd())
-# os.chdir(path)
-# print(os.getcwd())
-
-# generate_all_table()
+################## day-scale data #####################
+""" combine all day.csv file"""
+generate_all_table()
 # generate_one_stock_set('000001')
-#
-# # pick_stock()
-# generate_sub_all_table()
-#
-# transfer_sub_all_table()
-# generate_test_train_set()
-# check_pearson_corr('./train_set.csv')
-#
-# transfer_sub_all_table_key()
-# preprocess_sub_all_data()
-# h5_file_test()
 
-# generate_minute_data()
+""" pick 19 stocks and combine their data"""
+pick_stock()
+generate_sub_all_table()
+
+""" generate .csv format dataset for DQN and conduct basic analysis of stocks"""
+transfer_sub_all_table()
+generate_test_train_set()
+check_pearson_corr('./train_set.csv')
+
+""" generate .h5 format dataset for DDPG"""
+transfer_sub_all_table_key()
+preprocess_sub_all_data()
+h5_file_test()
+
+################## minute-scale data #####################
+""" generate minute-scale dataset"""
+generate_minute_data()
 transfer_table_minute()
