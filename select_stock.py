@@ -10,7 +10,6 @@ import h5py
 
 def pick_stock():
     """ pick stocks by industry
-    
     :return: write 19 stocks into 'stock_table.csv'
     """
     # get all stocks: code, name, c_name
@@ -150,27 +149,27 @@ def check_pearson_corr(path):
     df = df.drop(['DateTime'], axis=1)
     # plot LastPx
     df.plot(figsize=(14, 9))
-    plt.savefig('./19_stocks_raw.png')
+    plt.savefig('./vis/19_stocks_raw.png')
     plt.close()
     # plot percentage
     df_pc = df.pct_change()
-    df_pc.to_csv('./19_stocks_pct_change_on_train_set.csv')
+    df_pc.to_csv('./vis/19_stocks_pct_change_on_train_set.csv')
     df_pc.plot(figsize=(14, 9))
-    plt.savefig('./19_stock_pct.png')
+    plt.savefig('./vis/19_stock_pct.png')
     plt.close()
     # pair plot
     plt.figure(figsize=(15, 10))
     sns.pairplot(df.dropna())
-    plt.savefig('./19_stocks_pairplot.png')
+    plt.savefig('./vis/19_stocks_pairplot.png')
     plt.close()
     # calculate corr
     corr = df.corr(method='pearson', min_periods=1)  # pearson方法计算相关性
     print(corr)
-    corr.to_csv('./train_set_corr.csv', index=False)
+    corr.to_csv('./vis/train_set_corr.csv', index=False)
     # corr heatmap
     plt.figure(figsize=(15, 10))
     sns.heatmap(corr)
-    plt.savefig('./19_stocks_heatmap.png')
+    plt.savefig('./vis/19_stocks_heatmap.png')
     plt.close()
 
 
@@ -304,5 +303,5 @@ h5_file_test()
 
 ################## minute-scale data #####################
 """ generate minute-scale dataset"""
-generate_minute_data()
-transfer_table_minute()
+# generate_minute_data()
+# transfer_table_minute()
