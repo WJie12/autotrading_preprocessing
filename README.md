@@ -1,8 +1,10 @@
 # Introduction
 
-This repo is part of CS277 project: Deep Reinforcement Learning in Portfolio Management
+This repo is part of CS277 project: Deep Reinforcement Learning in Portfolio Management.
+
 The whole project consists three repos for three parts:
-1. [preprocessing](https://github.com/WJie12/autotrading_preprocessing):
+
+1. [Preprocessing](https://github.com/WJie12/autotrading_preprocessing):
     * Pre-stock-selection
     * Processing raw data provided by SSE
     * Generating datasets for DQN and DDPG based on the selected stocks
